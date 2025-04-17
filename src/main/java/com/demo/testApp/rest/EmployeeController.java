@@ -1,5 +1,6 @@
 package com.demo.testApp.rest;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,17 +39,17 @@ public class EmployeeController {
 
 	}
 
-	@GetMapping
-	public ResponseEntity<List<EmployeeResponse>> getEmployeeBasedOnParam(
-			@RequestParam(required = false) Designation designation, @RequestParam(required = false) Double minSalary,
-			@RequestParam(required = false) Double maxSalary, @RequestParam(required = false) Integer page,
-			@RequestParam(required = false) Integer size) {
-
-		List<EmployeeResponse> response = employeeService.getEmployeesBasedOnParams(designation, minSalary, maxSalary,
-				page, size);
-
-		return ResponseEntity.ok(response);
-	}
+//	@GetMapping
+//	public ResponseEntity<List<EmployeeResponse>> getEmployeeBasedOnParam(
+//			@RequestParam(required = false) Designation designation, @RequestParam(required = false) Double minSalary,
+//			@RequestParam(required = false) Double maxSalary, @RequestParam(defaultValue = "0") int page,
+//			@RequestParam(defaultValue = "10") int size) {
+//
+//		List<EmployeeResponse> response = employeeService.getEmployeesBasedOnParams(designation, minSalary, maxSalary,
+//				page, size);
+//
+//		return ResponseEntity.ok(response);
+//	}
 
 	@GetMapping("/{department}")
 	public ResponseEntity<List<EmployeeResponse>> getEmployeesByDepartment(@PathVariable String department) {
@@ -58,4 +59,17 @@ public class EmployeeController {
 		return ResponseEntity.ok(employeesByDepartmentList);
 
 	}
+
+	@GetMapping
+	public ResponseEntity<List<EmployeeResponse>> getEmployees(@RequestParam(required = false) String name,
+			@RequestParam(required = false) Designation designation,
+			@RequestParam(required = false) Date joiningDateFrom, @RequestParam(required = false) Date joiningDateTo,
+			@RequestParam(required = false) Long departmentId, @RequestParam(required = false) Double minSalary,
+			@RequestParam(required = false) Double maxSalary) {
+
+		List<EmployeeResponse> response = employeeService.getEmployeesWithDynamicFilter(name, designation,
+				joiningDateFrom, joiningDateTo, departmentId, minSalary, maxSalary);
+		return ResponseEntity.ok(response);
+	}
+
 }

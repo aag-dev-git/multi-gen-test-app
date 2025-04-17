@@ -1,10 +1,17 @@
 package com.demo.testApp.services;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.demo.testApp.entities.Department;
@@ -17,6 +24,7 @@ import com.demo.testApp.repositories.EmployeeRepository;
 import com.demo.testApp.repositories.SalaryRepository;
 import com.demo.testApp.req_res_dto.EmployeeRequest;
 import com.demo.testApp.req_res_dto.EmployeeResponse;
+import com.demo.testApp.req_res_dto.EmployeeSpecifications;
 
 @Service
 public class EmployeeService {
@@ -103,23 +111,26 @@ public class EmployeeService {
 	}
 
 	public List<EmployeeResponse> getEmployeesBasedOnParams(Designation designation, Double minSalary, Double maxSalary,
-			int page, int size) {
+			Integer pageNum, Integer size) {
 
 		List<EmployeeResponse> employeeResponseList = new ArrayList<EmployeeResponse>();
-
-		Department department = departmentRepository.findByName(null).get();
 
 		List<Employee> listOfEmployees = null;
 		try {
 
 			if (designation != null) {
-				listOfEmployees = employeeRepository.findByDepartment(department);
+				listOfEmployees = employeeRepository.findByDesignation(designation);
 			} else if (minSalary != null && maxSalary != null) {
 
 				// First find salaries
 				List<Salary> listOfSal = salaryRepository.findByAmountBetween(minSalary, maxSalary);
 
 				listOfEmployees = employeeRepository.findBySalaryIn(listOfSal);
+			} else {
+				// create Pageable instance
+				Pageable pageable = PageRequest.of(pageNum, size, Sort.by("id").ascending());
+				Page<Employee> page = employeeRepository.findAll(pageable);
+				listOfEmployees = page.getContent();
 			}
 
 		} catch (Exception e) {
@@ -142,6 +153,24 @@ public class EmployeeService {
 
 		return employeeResponseList;
 
+	}
+
+	public List<EmployeeResponse> getEmployeesWithDynamicFilter(String name, Designation designation, Date joiningDateFrom,
+			Date joiningDateTo, Long departmentId, Double minSalary, Double maxSalary) {
+
+		Specification<Employee> spec = EmployeeSpecifications.withDynamicFilter(name, designation, joiningDateFrom,
+				joiningDateTo, departmentId, minSalary, maxSalary);
+
+		List<Employee> employees = employeeRepository.findAll(spec);
+
+		return employees.stream().map(emp -> {
+			EmployeeResponse res = new EmployeeResponse();
+			res.setName(emp.getName());
+			res.setDesignation(emp.getDesignation());
+			res.setJoiningDate(emp.getJoiningDate());
+			res.setDepartmentName(emp.getDepartment() != null ? emp.getDepartment().getName() : null);
+			return res;
+		}).collect(Collectors.toList());
 	}
 
 }

@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(
 			MethodArgumentNotValidException ex) {
-		
+
 		Map<String, Object> body = new HashMap<String, Object>();
 
 		body.put("timeStamp", LocalDateTime.now());
